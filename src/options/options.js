@@ -31,7 +31,6 @@ let cacheIndexProxy;
 const elts = {};
 const fixedPermissions = browser.runtime.getManifest().permissions;
 const pbe_version_number = PBE_VERSION;
-const contentScriptMatches = CONTENT_SCRIPT_MATCHES;
 
 // ---------------------------------------------------------------------------
 /* Confirmations
@@ -457,9 +456,6 @@ function buildAndPopulatePermissionsTable() {
     browser.permissions.getAll().then(result => {
         let origins = result.origins || [];
         //console.log(origins);
-
-        // Filter out the match pattern(s) from our manifest's `content_scripts` field.
-        origins = origins.filter(p => !contentScriptMatches.includes(p));
 
         function selectIntroText(selected) {
             const types = ['no', 'multi', 'all'];

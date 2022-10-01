@@ -6,16 +6,6 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "*://*/*"
-      ],
-      "js": [
-        "content.js"
-      ]
-    }
-  ],
   "options_ui": {
     "page": "options/options.html",
     "open_in_tab": true

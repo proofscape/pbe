@@ -24,8 +24,6 @@ module.exports = env => {
     const args = env || {};
     const minmode = !!args.min;
     const chrome = !!args.chr;
-    const devManifest = require(`./src/manifest.${chrome ? 'v3' : 'v2'}.json`);
-    const contentScriptMatches = devManifest.content_scripts[0].matches;
 
     return {
         entry: {
@@ -73,7 +71,6 @@ module.exports = env => {
         plugins: [
             new webpack.DefinePlugin({
                 PBE_VERSION: JSON.stringify(process.env.npm_package_version),
-                CONTENT_SCRIPT_MATCHES: JSON.stringify(contentScriptMatches),
             }),
             new CopyWebpackPlugin({
                 patterns: [
