@@ -84,6 +84,11 @@ module.exports = env => {
                     },
                     {
                         context: "src",
+                        from: "button",
+                        to: "button"
+                    },
+                    {
+                        context: "src",
                         from: chrome ? "manifest.v3.json" : "manifest.v2.json",
                         to: "manifest.json",
                         transform: (content, path) => {

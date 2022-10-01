@@ -68,6 +68,19 @@ export class PbeBackground {
             this.browserInfo.name = 'Chrome';
         }
 
+
+        // /////////////////////////////////////////////////
+        // EXPERIMENTAL
+
+        const browserAction = this.isChrome() ? browser.action : browser.browserAction;
+        browserAction.onClicked.addListener((tab) => {
+            console.log(tab);
+            self.requestHostPermission(tab);
+        });
+
+        // /////////////////////////////////////////////////
+
+
         // Initialize the background peer. Will complete setting it up later.
         this.bgPeer = new CsBgsPeer('pfscBgPeer');
 
@@ -138,6 +151,10 @@ export class PbeBackground {
 
     getBrowserName() {
         return this.browserInfo.name;
+    }
+
+    isChrome() {
+        return this.browserInfo.name === 'Chrome';
     }
 
     readConfigVar({name}) {
