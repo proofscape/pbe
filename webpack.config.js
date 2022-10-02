@@ -23,6 +23,7 @@ const path_resolver = require('path');
 module.exports = env => {
     const args = env || {};
     const minmode = !!args.min;
+    const supplyGeckoID = !!args.gid;
     const chrome = !!args.chr;
 
     return {
@@ -89,12 +90,17 @@ module.exports = env => {
                     },
                     {
                         context: "src",
-                        from: chrome ? "manifest.v3.json" : "manifest.v2.json",
+                        from: chrome ? "manifest.chrome.json" : "manifest.mozilla.json",
                         to: "manifest.json",
                         transform: (content, path) => {
                             const manifest = JSON.parse(content.toString());
                             // Add version number from package.json to manifest.json, so we don't have to repeat ourselves.
                             manifest.version = require("./package.json").version;
+                            // When you want to try loading from a zip file in Firefox Dev Edition, you need to supply
+                            // an ID. We support that with `npm run build:moz:gid` ("gid" stands for "Gecko ID").
+                            if (!chrome && !supplyGeckoID) {
+                                delete manifest["browser_specific_settings"];
+                            }
                             return JSON.stringify(manifest, null, 2);
                         },
                     },

@@ -11,6 +11,7 @@
   "scripts": {
     "build:moz": "webpack; date",
     "build:moz:min": "webpack --env min; date",
+    "build:moz:gid": "webpack --env gid; date",
     "build:chr": "webpack --env chr; date",
     "build:chr:min": "webpack --env chr min; date"
   },
