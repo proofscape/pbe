@@ -655,7 +655,7 @@ async function addMatchPatternForContentScript(pattern) {
         // Must make initial registration.
         const pbeContentScript = {
             id: PBE_CS_ID,
-            js: ["content.js"],
+            js: ["/content.js"],
             matches: [pattern],
         };
         return browser.scripting.registerContentScripts([pbeContentScript]);
