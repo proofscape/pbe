@@ -31,6 +31,7 @@ let cacheIndexProxy;
 const elts = {};
 const fixedPermissions = browser.runtime.getManifest().permissions;
 const pbe_version_number = PBE_VERSION;
+const PBE_CS_ID = 'pbe-content-script';
 
 // ---------------------------------------------------------------------------
 /* Confirmations
@@ -634,6 +635,43 @@ function isChrome() {
     });
 }
 
+function getRegisteredMatchesForContentScript() {
+    return browser.scripting.getRegisteredContentScripts().then(result => {
+        console.debug('registered CSes:', result);
+        if (result.length === 0) {
+            return [];
+        }
+        // This extension will only ever register one script, so, if there are any,
+        // the first (and only) one is the one we want.
+        const info = result[0];
+        return info.matches;
+    });
+}
+
+async function addMatchPatternForContentScript(pattern) {
+    const existingMatches = await getRegisteredMatchesForContentScript();
+    console.debug('existingMatches:', existingMatches);
+    if (existingMatches.length === 0) {
+        // Must make initial registration.
+        const pbeContentScript = {
+            id: PBE_CS_ID,
+            js: ["content.js"],
+            matches: [pattern],
+        };
+        return browser.scripting.registerContentScripts([pbeContentScript]);
+    } else if (existingMatches.includes(pattern)) {
+        // Nothing to do. The desired pattern is already registered.
+        return Promise.resolve();
+    } else {
+        // Must update existing registration.
+        const pbeContentScript = {
+            id: PBE_CS_ID,
+            matches: existingMatches.concat([pattern]),
+        };
+        return browser.scripting.updateContentScripts([pbeContentScript]);
+    }
+}
+
 function startup() {
     peer.openConnection(bgPeerName);
     cacheIndexProxy = new CacheIndexProxy(peer, bgPeerName);
@@ -693,6 +731,19 @@ function startup() {
         }).then(granted => {
             if (granted) {
                 loadPage();
+
+                // /////////////////////////////////////////////////
+                // EXPERIMENTAL
+
+                addMatchPatternForContentScript(urlPattern).then(result => {
+                    console.debug('registration result', result);
+                }, reason => {
+                    console.error('registration error reason', reason);
+                });
+
+
+                // /////////////////////////////////////////////////
+
             }
         });
     });
