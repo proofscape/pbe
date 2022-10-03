@@ -566,59 +566,6 @@ function restoreHostListFromStorage() {
     });
 }
 
-async function handleAllowAllCheckboxChange(event) {
-    /* For now we're disabling this option. Math PDFs tend to come from just a handful of domains.
-     * There's really no motivation to allow all URLs.
-     */
-    console.log('Allow All URLs option is currently disabled.');
-    return;
-
-    const doAllow = event.target.checked
-    //console.log('allow all URLs: ', doAllow);
-    const req = {
-        origins: ["<all_urls>"]
-    };
-    const browserIsChrome = await isChrome();
-    if (doAllow) {
-        /* If we're in Chrome, then we want to first save the host list, so that it can
-         * be restored later, in case we want to remove the "<all_urls>" permission.
-         * In Firefox, this is neither necessary nor possible: it is not necessary because
-         * Firefox treats "<all_urls>" as a single pattern to be removed (it doesn't remove all
-         * other permissions along with it); it is not possible because in Firefox we lose
-         * user-action-ness if we have to wait for a promise to resolve (not so in Chrome).
-         * (One alternative design to remove the need here for a promise might be to store the
-         * host list every time it is updated instead of now.) */
-        const firstStep = browserIsChrome ?
-            storeHostList().then(() => browser.permissions.request(req)) :
-            browser.permissions.request(req);
-        firstStep.then(changed => {
-            if (changed) {
-                loadPage();
-            } else {
-                event.target.checked = !doAllow;
-            }
-        });
-    } else {
-        browser.permissions.remove(req).then(changed => {
-            if (changed) {
-                /* Again, if we're in Chrome then we want to now try to restore the former
-                 * host permissions. Like the step described above, in Firefox this is not
-                 * necessary, and not possible without showing a dialog and getting another
-                 * user click. Such a dialog might be desirable even in Chrome, just to explain
-                 * to the user what's going on. In particular it would be good to let them know
-                 * this is their one chance to do this. Anyway, for now I skip it. */
-                if (browserIsChrome) {
-                    restoreHostListFromStorage().then(loadPage);
-                } else {
-                    loadPage();
-                }
-            } else {
-                event.target.checked = !doAllow;
-            }
-        });
-    }
-}
-
 function populateAdvancedConfig() {
     peer.checkReady(bgPeerName).then(() => {
         peer.makeRequest(bgPeerName, 'readConfigVar', {name: 'readStorageInBg'}).then(readStorageInBg => {
@@ -807,9 +754,6 @@ function startup() {
     $('#addNewPermissionButton').on('click', event => {
         showPermissionsModal("*://example.com/*");
     });
-
-    // "Allow all URLs" checkbox:
-    $('#allowAllUrlCheckbox input').on('change', handleAllowAllCheckboxChange);
 
     // "Load PDFs in foreground" checkbox:
     $('#foregroundLoadCheckbox input').on('change', event => {
