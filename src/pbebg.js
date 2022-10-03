@@ -68,18 +68,12 @@ export class PbeBackground {
             this.browserInfo.name = 'Chrome';
         }
 
-
-        // /////////////////////////////////////////////////
-        // EXPERIMENTAL
-
+        // Set up the browser action
         const browserAction = this.isChrome() ? browser.action : browser.browserAction;
         browserAction.onClicked.addListener((tab) => {
-            console.log(tab);
-            self.requestHostPermission(tab);
+            //console.debug(tab);
+            self.requestActivation(tab);
         });
-
-        // /////////////////////////////////////////////////
-
 
         // Initialize the background peer. Will complete setting it up later.
         this.bgPeer = new CsBgsPeer('pfscBgPeer');
@@ -141,6 +135,25 @@ export class PbeBackground {
      */
     requestHostPermission(msg) {
         this.optionsPageInfo.requestHostPermission = msg.url;
+        this.openOptionsPage();
+    }
+
+    /* Open the options page, with a flag indicating that activation has been
+     * requested for the active tab.
+     *
+     * "Activation" means (a) requesting host permission for the URL if we don't
+     * have it yet, and (b) registering our content script to load on pages matching
+     * the pattern.
+     *
+     * In all cases, the options page will open. If we are already activated at
+     * the given URL, nothing more happens. If not, we open a dialog asking the user
+     * to grant host permission, and then we activate, if granted.
+     *
+     * @param tab: the active tab
+     * @return: nothing
+     */
+    requestActivation(tab) {
+        this.optionsPageInfo.requestActivation = tab.url;
         this.openOptionsPage();
     }
 

@@ -109,7 +109,7 @@ code {
     font-family: monospace;
 }
 
-#addNewPermissionButton {
+.addNewButton {
     padding: 0px 14px;
     border-radius: 24px;
     background: #ccc;
@@ -120,7 +120,7 @@ code {
     user-select: none;
 }
 
-#addNewPermissionButton:hover {
+.addNewButton:hover {
     background: #999;
 }
 

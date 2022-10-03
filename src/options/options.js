@@ -29,9 +29,14 @@ const peer = new CsBgsPeer(`pbeOptionsPeer-@(${(new Date()).toISOString()})-${Ma
 const bgPeerName = 'pfscBgPeer';
 let cacheIndexProxy;
 const elts = {};
-const fixedPermissions = browser.runtime.getManifest().permissions;
 const pbe_version_number = PBE_VERSION;
 const PBE_CS_ID = 'pbe-content-script';
+const DOWNLOAD_ACTION_DESCRIP = "Allow the extension to download PDFs from URLs matching the pattern:";
+const ACTIVATE_ACTION_DESCRIP = (
+    "Do you want to activate the Proofscape browser extension to work with PISE when it runs under the following URL pattern?" +
+    " You should not do this unless you trust the operators of this site."
+);
+const EXAMPLE_URL_PATTERN = "*://example.com/*";
 
 // ---------------------------------------------------------------------------
 /* Confirmations
@@ -43,6 +48,7 @@ const PBE_CS_ID = 'pbe-content-script';
 
 const confirmations = {};
 confirmations.removeItemFromCache = true;
+confirmations.revokeActivation = true;
 confirmations.revokePermission = true;
 
 /* Temporarily turn off confirmation for a particular question.
@@ -413,9 +419,11 @@ async function loadPage() {
     elts.max_cache_mb.value = cacheInfo.maxSize/1048576;
     displayCurCacheSize(cacheInfo);
     buildAndPopulateCacheTable(cacheInfo);
+    buildAndPopulateActivationsTable();
     buildAndPopulatePermissionsTable();
     populateAdvancedConfig();
-    handleNewPermissionRequest();
+    await handleNewActivationRequest();
+    return handleNewPermissionRequest();
 }
 
 async function doResize() {
@@ -444,92 +452,132 @@ async function handleNewPermissionRequest() {
         const urlObject = new URL(newUrl);
         const hostname = urlObject.hostname;
         const urlPattern = `*://${hostname}/*`;
-        showPermissionsModal(urlPattern);
+        showPermissionsModal({
+            urlPattern: urlPattern,
+            actionDescrip: DOWNLOAD_ACTION_DESCRIP,
+            doActivate: false,
+        });
     }
 }
 
-function showPermissionsModal(urlPattern) {
-    $('#permissionsModal .modal-body input').val(urlPattern);
+async function handleNewActivationRequest() {
+    await peer.checkReady(bgPeerName);
+    const newUrl = await peer.makeRequest(bgPeerName, 'consumeOptionsPageInfo', {
+        propertyName: 'requestActivation',
+    });
+    if (newUrl) {
+        const urlObject = new URL(newUrl);
+        const hostname = urlObject.hostname;
+        const urlPattern = `*://${hostname}/*`;
+
+        const existingMatches = await getRegisteredMatchesForContentScript();
+        // If the pattern is already registered, then we don't do anything.
+        // If not, then we ask for the host permission, and register if granted.
+        if (!existingMatches.includes(urlPattern)) {
+            showPermissionsModal({
+                urlPattern: urlPattern,
+                actionDescrip: ACTIVATE_ACTION_DESCRIP,
+                doActivate: true,
+            });
+        }
+    }
+}
+
+function showPermissionsModal({urlPattern, actionDescrip, doActivate}) {
+    actionDescrip = actionDescrip || 'Grant host permission for URLs matching the pattern:';
+    doActivate = +!!doActivate; // 0 or 1
+    $('#permissionsModal .action-description').text(actionDescrip);
+    $('#permissionsModal .modal-body input[name="pattern"]').val(urlPattern);
+    $('#permissionsModal .modal-body input[name="activate"]').val(doActivate);
     $('#permissionsModal').modal();
 }
 
-function buildAndPopulatePermissionsTable() {
-    browser.permissions.getAll().then(result => {
-        let origins = result.origins || [];
-        //console.log(origins);
-
-        function selectIntroText(selected) {
-            const types = ['no', 'multi', 'all'];
-            for (let type of types) {
-                const span = $(`#${type}UrlIntroText`);
-                if (type === selected) {
-                    span.removeClass('hidden');
-                } else {
-                    span.addClass('hidden');
-                }
-            }
-        }
-
-        function buildTable() {
-            const rows = [];
-            for (let pattern of origins) {
-                let entries = [
-                    makeDocElt({
-                        type: 'code',
-                        textContents: pattern,
-                    })
-                ];
-                if (!fixedPermissions.includes(pattern)) {
-                    const tcan = makeTrashCanImage("Revoke permission");
-                    entries.push(tcan);
-                }
-                rows.push(makeTableRow(entries));
-            }
-            replaceTableRows(elts.permissions_table_body, rows);
-
-            // Activate input elements. We do it inside of a timeout so the elements have a chance to
-            // be added to the DOM first.
-            setTimeout(function() {
-                // Trashcans:
-                elts.permissions_table_body.querySelectorAll('img.trash').forEach(elt => {
-                    elt.addEventListener('click', event => {
-                        const pattern = elt.parentNode.parentNode.firstChild.innerText;
-                        getConfirmation({
-                            body: `<p>Revoke download permission for ${pattern}?</p>`,
-                            name: "revokePermission",
-                            title: "Confirm revocation",
-                            addChillBox: true,
-                        }).then(confirmed => {
-                            if (confirmed) {
-                                browser.permissions.remove({
-                                    origins: [pattern]
-                                }).then(removed => {
-                                    loadPage();
-                                });
-                            }
-                        });
-                    });
-                });
-            }, 0);
-        }
-
-        if (origins.includes("<all_urls>")) {
-            selectIntroText('all');
-            $('#addNewPermissionRow').addClass('hidden');
-            $('#permissionsTable').addClass('hidden');
-        } else {
-            $('#addNewPermissionRow').removeClass('hidden');
-            $('#permissionsTable').removeClass('hidden');
-            if (origins.length === 0) {
-                selectIntroText('no');
-            } else {
-                selectIntroText('multi');
-            }
-        }
-
-        buildTable();
-
+async function buildAndPopulateActivationsTable() {
+    const existingMatches = await getRegisteredMatchesForContentScript();
+    return buildAndPopulatePatternsTable({
+        patterns: existingMatches,
+        introGroupId: 'activationsIntro',
+        thingRevoked: 'activation',
+        tbodyElt: elts.activations_table_body,
+        confirmationName: "revokeActivation",
+        revokeFunction: removeMatchPatternForContentScript,
     });
+}
+
+async function buildAndPopulatePermissionsTable() {
+    const perms = await browser.permissions.getAll();
+    const origins = perms.origins || [];
+    return buildAndPopulatePatternsTable({
+        patterns: origins,
+        introGroupId: 'hostPermIntro',
+        thingRevoked: 'permission',
+        tbodyElt: elts.permissions_table_body,
+        confirmationName: "revokePermission",
+        revokeFunction: async pattern => {
+            await browser.permissions.remove({
+                origins: [pattern]
+            });
+            await removeMatchPatternForContentScript(pattern);
+        },
+    });
+}
+
+async function buildAndPopulatePatternsTable(
+    {patterns, introGroupId, thingRevoked, tbodyElt, confirmationName, revokeFunction}
+    ) {
+
+    function selectIntroText() {
+        const selected = patterns.length === 0 ? 'no' : 'multi';
+        const types = ['no', 'multi'];
+        for (let type of types) {
+            const span = $(`#${introGroupId} .${type}UrlIntroText`);
+            if (type === selected) {
+                span.removeClass('hidden');
+            } else {
+                span.addClass('hidden');
+            }
+        }
+    }
+
+    function buildTable() {
+        const rows = [];
+        for (let pattern of patterns) {
+            let entries = [
+                makeDocElt({
+                    type: 'code',
+                    textContents: pattern,
+                })
+            ];
+            const tcan = makeTrashCanImage(`Revoke ${thingRevoked}`);
+            entries.push(tcan);
+            rows.push(makeTableRow(entries));
+        }
+        replaceTableRows(tbodyElt, rows);
+
+        // Activate input elements. We do it inside of a timeout so the elements have a chance to
+        // be added to the DOM first.
+        setTimeout(function() {
+            // Trashcans:
+            tbodyElt.querySelectorAll('img.trash').forEach(elt => {
+                elt.addEventListener('click', async event => {
+                    const pattern = elt.parentNode.parentNode.firstChild.innerText;
+                    const confirmed = await getConfirmation({
+                        body: `<p>Revoke ${thingRevoked} for ${pattern}?</p>`,
+                        name: confirmationName,
+                        title: "Confirm revocation",
+                        addChillBox: true,
+                    });
+                    if (confirmed) {
+                        await revokeFunction(pattern);
+                        await loadPage();
+                    }
+                });
+            });
+        }, 0);
+    }
+
+    selectIntroText();
+    buildTable();
 }
 
 /* Store current list of host permission strings in storage.
@@ -679,6 +727,7 @@ function startup() {
     elts.cur_cache_pct = document.querySelector('#cur_cache_pct');
     elts.msg_box = document.querySelector('#msg_box');
     elts.cache_table_body = document.querySelector('#cache_table_body');
+    elts.activations_table_body = document.querySelector('#activations_table_body');
     elts.permissions_table_body = document.querySelector('#permissions_table_body');
 
     // Activate input elements
@@ -719,30 +768,21 @@ function startup() {
     })
 
     // The "permissions" modal:
-    $('#permissionsModal .btn-primary').on('click', event => {
-        const urlPattern = $('#permissionsModal .modal-body input').val();
-        console.log('requesting permissions for: ', urlPattern);
+    $('#permissionsModal .btn-primary').on('click', async event => {
+        const urlPattern = $('#permissionsModal .modal-body input[name="pattern"]').val();
+        const doActivate = !!+$('#permissionsModal .modal-body input[name="activate"]').val();
+        console.debug('requesting permissions for: ', urlPattern);
         $('#permissionsModal').modal('hide');
-        browser.permissions.request({
+        const granted = await browser.permissions.request({
             origins: [urlPattern]
-        }).then(granted => {
-            if (granted) {
-                loadPage();
-
-                // /////////////////////////////////////////////////
-                // EXPERIMENTAL
-
-                addMatchPatternForContentScript(urlPattern).then(result => {
-                    console.debug('registration result', result);
-                }, reason => {
-                    console.error('registration error reason', reason);
-                });
-
-
-                // /////////////////////////////////////////////////
-
-            }
         });
+        if (granted) {
+            if (doActivate) {
+                const regResult = await addMatchPatternForContentScript(urlPattern);
+                console.debug('registration result:', regResult);
+            }
+            await loadPage();
+        }
     });
     $('#permissionsModal .modal-body input').on('keypress', event => {
         if (event.key === "Enter") {
@@ -750,9 +790,22 @@ function startup() {
         }
     });
 
+    // "Add activation" button:
+    $('#addNewActivationButton').on('click', event => {
+        showPermissionsModal({
+            urlPattern: EXAMPLE_URL_PATTERN,
+            actionDescrip: ACTIVATE_ACTION_DESCRIP,
+            doActivate: true,
+        });
+    });
+
     // "Add permission" button:
     $('#addNewPermissionButton').on('click', event => {
-        showPermissionsModal("*://example.com/*");
+        showPermissionsModal({
+            urlPattern: EXAMPLE_URL_PATTERN,
+            actionDescrip: DOWNLOAD_ACTION_DESCRIP,
+            doActivate: false,
+        });
     });
 
     // "Load PDFs in foreground" checkbox:

@@ -49,21 +49,47 @@
             </table>
         </div>
 
+        <!-- ---------------------- Activations ---------------------- -->
+        <hr>
+        <h2>Activations</h2>
+        <p id="activationsIntro">
+            <span class="noUrlIntroText hidden">
+                You have not yet activated the extension to work with instances of PISE running under
+                any URLs.
+            </span>
+            <span class="multiUrlIntroText hidden">
+                You have activated the extension to work with instances of PISE running under
+                URLs matching any of the following patterns.
+            </span>
+        </p>
+        <table id="activationsTable">
+            <tbody id="activations_table_body">
+            </tbody>
+        </table>
+        <div id="addNewActivationRow" class="marginTopRow">
+            <div id="addNewActivationButton" class="addNewButton" title="Add new activation">+</div>
+        </div>
+
         <!-- ---------------------- Permissions ---------------------- -->
         <hr>
-        <h2>Download permissions</h2>
-        <p>
-            You have granted permission to download from
-            <span id="noUrlIntroText" class="hidden">no URLs.</span>
-            <span id="multiUrlIntroText" class="hidden">URLs matching any of the following patterns:</span>
-            <span id="allUrlIntroText" class="hidden">all URLs.</span>
+        <h2>Host permissions</h2>
+        <p id="hostPermIntro">
+            <span class="noUrlIntroText hidden">
+                You have not yet granted permission to work with any URLs.
+            </span>
+            <span class="multiUrlIntroText hidden">
+                You have granted permission to work with
+                URLs matching any of the following patterns.<br>
+                This means the extension can download PDFs from these URLs,
+                and/or interact with PISE when it runs under these URLs.
+            </span>
         </p>
         <table id="permissionsTable">
             <tbody id="permissions_table_body">
             </tbody>
         </table>
         <div id="addNewPermissionRow" class="marginTopRow">
-            <div id="addNewPermissionButton" title="Add new permission">+</div>
+            <div id="addNewPermissionButton" class="addNewButton" title="Add new permission">+</div>
         </div>
 
         <!-- ---------------------- Advanced config ---------------------- -->
@@ -140,12 +166,13 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p>
-                        Allow the extension to download PDFs from URLs matching the pattern:
+                    <p class="action-description">
+                        Grant host permission for URLs matching the pattern:
                     </p>
                     <p>
-                        <input type="text" size="48" placeholder="*://example.com/*">
+                        <input name="pattern" type="text" size="48" placeholder="*://example.com/*">
                         <a class="external smaller" target="_blank" href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns#Match_pattern_structure">Help</a>
+                        <input name="activate" type="hidden" value="0">
                     </p>
                     <p>
                         Your browser may ask you to confirm.
