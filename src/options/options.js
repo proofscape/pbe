@@ -648,9 +648,23 @@ function getRegisteredMatchesForContentScript() {
     });
 }
 
+/* Set a URL match pattern, so that our content script will be injected any time
+ * a page matching that pattern is loaded.
+ *
+ * If the pattern is already set, nothing changes.
+ *
+ * This method provides an abstraction, so that the caller need not worry about
+ * registering versus updating the record for the content script.
+ *
+ * Returns a promise that rejects if there was a problem, or resolves with the
+ * return value of `browser.scripting.getRegisteredContentScripts()`, i.e. the
+ * list of registered content scripts for this extension _after_ making the
+ * requested change.
+ */
 async function addMatchPatternForContentScript(pattern) {
     const existingMatches = await getRegisteredMatchesForContentScript();
     console.debug('existingMatches:', existingMatches);
+    let p = Promise.resolve();
     if (existingMatches.length === 0) {
         // Must make initial registration.
         const pbeContentScript = {
@@ -658,18 +672,54 @@ async function addMatchPatternForContentScript(pattern) {
             js: ["/content.js"],
             matches: [pattern],
         };
-        return browser.scripting.registerContentScripts([pbeContentScript]);
+        p = browser.scripting.registerContentScripts([pbeContentScript]);
     } else if (existingMatches.includes(pattern)) {
         // Nothing to do. The desired pattern is already registered.
-        return Promise.resolve();
     } else {
         // Must update existing registration.
         const pbeContentScript = {
             id: PBE_CS_ID,
             matches: existingMatches.concat([pattern]),
         };
-        return browser.scripting.updateContentScripts([pbeContentScript]);
+        p = browser.scripting.updateContentScripts([pbeContentScript]);
     }
+    return p.then(() => browser.scripting.getRegisteredContentScripts());
+}
+
+/* Remove a URL match pattern, so that our content script will NOT be injected
+ * when pages matching that pattern are loaded.
+ *
+ * If the pattern already is absent, nothing changes.
+ *
+ * This method provides an abstraction, so that the caller need not worry about
+ * un-registering versus updating the record for the content script.
+ *
+ * Returns a promise that rejects if there was a problem, or resolves with the
+ * return value of `browser.scripting.getRegisteredContentScripts()`, i.e. the
+ * list of registered content scripts for this extension _after_ making the
+ * requested change.
+ */
+async function removeMatchPatternForContentScript(pattern) {
+    const existingMatches = await getRegisteredMatchesForContentScript();
+    console.debug('existingMatches:', existingMatches);
+    let p = Promise.resolve();
+    if (!existingMatches.includes(pattern)) {
+        // Nothing to do. The pattern to be removed is already absent.
+    } else if (existingMatches.length === 1) {
+        // The pattern to be removed is the last one, so it is time to
+        // unregister the content script completely.
+        p = browser.scripting.unregisterContentScripts({
+            ids: [PBE_CS_ID],
+        });
+    } else {
+        // Must update existing registration.
+        const pbeContentScript = {
+            id: PBE_CS_ID,
+            matches: existingMatches.filter(x => x !== pattern),
+        };
+        p = browser.scripting.updateContentScripts([pbeContentScript]);
+    }
+    return p.then(() => browser.scripting.getRegisteredContentScripts());
 }
 
 function startup() {
