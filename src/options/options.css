@@ -110,7 +110,7 @@ code {
 }
 
 .addNewButton {
-    padding: 0px 14px;
+    padding: 0 16px 4px;
     border-radius: 24px;
     background: #ccc;
     display: inline-block;
