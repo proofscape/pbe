@@ -467,6 +467,16 @@ async function handleNewActivationRequest() {
         propertyName: 'requestActivation',
     });
     if (newUrl) {
+        // Ignore "special" pages.
+        // In Firefox, special pages start with "about:" or "moz-extension:".
+        if (newUrl.startsWith("about:") || newUrl.startsWith("moz-extension:")) {
+            return;
+        }
+        // In Chrome, special pages start with "chrome:" or "chrome-extension:".
+        if (newUrl.startsWith("chrome:") || newUrl.startsWith("chrome-extension:")) {
+            return;
+        }
+
         const urlObject = new URL(newUrl);
         const hostname = urlObject.hostname;
         const urlPattern = `*://${hostname}/*`;

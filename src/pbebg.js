@@ -167,6 +167,7 @@ export class PbeBackground {
      * @return: nothing
      */
     requestActivation(tab) {
+        //console.debug('browser action on :', tab.url);
         this.optionsPageInfo.requestActivation = tab.url;
         this.openOptionsPage();
     }
