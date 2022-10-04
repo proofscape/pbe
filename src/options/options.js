@@ -423,7 +423,8 @@ async function loadPage() {
     buildAndPopulatePermissionsTable();
     populateAdvancedConfig();
     await handleNewActivationRequest();
-    return handleNewPermissionRequest();
+    await handleNewPermissionRequest();
+    await showOnboarding();
 }
 
 async function doResize() {
@@ -480,6 +481,15 @@ async function handleNewActivationRequest() {
                 doActivate: true,
             });
         }
+    }
+}
+
+async function showOnboarding() {
+    const doShow = await peer.makeRequest(bgPeerName, 'consumeOptionsPageInfo', {
+        propertyName: 'showOnboarding',
+    });
+    if (doShow) {
+        $('#gettingStartedModal').modal();
     }
 }
 
@@ -819,6 +829,11 @@ function startup() {
                 value: readStorageInBg,
             });
         });
+    });
+
+    // "Getting Started" dialog:
+    $('#gettingStartedLink').on('click', event => {
+        $('#gettingStartedModal').modal();
     });
 
     // "About PBE" dialog:

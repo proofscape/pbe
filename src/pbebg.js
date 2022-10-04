@@ -105,6 +105,20 @@ export class PbeBackground {
 
         // Add handlers both as messageHandlers for runtime.onMessage, and to the bg peer.
         this.setupBgHandlers();
+
+        // Show the options page with "Getting Started" dialog, for an "onboarding" page.
+        // See https://extensionworkshop.com/documentation/develop/onboard-upboard-offboard-users/
+        browser.runtime.onInstalled.addListener(async ({ reason, temporary }) => {
+            //if (temporary) return; // skip during development
+            switch (reason) {
+                case "install":
+                {
+                    self.showOnboarding();
+                }
+                    break;
+                // add code here for upboarding / offboarding
+            }
+        });
     }
 
     /*
@@ -154,6 +168,11 @@ export class PbeBackground {
      */
     requestActivation(tab) {
         this.optionsPageInfo.requestActivation = tab.url;
+        this.openOptionsPage();
+    }
+
+    showOnboarding() {
+        this.optionsPageInfo.showOnboarding = true;
         this.openOptionsPage();
     }
 

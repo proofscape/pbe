@@ -103,6 +103,15 @@
             PDFs should load from cache about twice as fast, but the PISE app may become unresponsive during loading.
         </div>
 
+        <!-- ---------------------- Help --------------------------- -->
+
+        <hr>
+        <h2>Help</h2>
+        <ul>
+            <li><a id="gettingStartedLink" href="#">Getting Started</a></li>
+            <li><a target="_blank" href="https://github.com/proofscape/pbe">PBE at GitHub</a></li>
+        </ul>
+
         <!-- ---------------------- About --------------------------- -->
 
         <hr>
@@ -151,6 +160,106 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="gettingStartedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Getting Started</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h2>
+                        Welcome to the Proofscape Browser Extension (PBE)!
+                    </h2>
+                    <p>
+                        The PBE is designed to work with
+                        <a target="_blank" href="https://docs.proofscape.org/pise/index.html">PISE</a>
+                        (the Proofscape Integrated Study Environment),
+                        allowing PISE to load PDFs from the Internet.
+                    </p>
+                    <p>
+                        However, first you have to give it permission, in a process
+                        we call <i>activation</i>.
+                    </p>
+
+                    <h3>Activation</h3>
+                    <p>
+                        PISE is a web app, which can be hosted by anyone, anywhere on the Internet.
+                        For example, there is an instance of PISE running at
+                        <a target="_blank" href="https://pise.proofscape.org">https://pise.proofscape.org</a>,
+                        which supports the Proofscape documentation.
+                    </p>
+                    <p>
+                        Before the PBE can work with any given instance of PISE, you have to grant it
+                        permission to do so, which we call <i>activation</i>.
+                        If you have just installed the PBE, it is not yet activated anywhere.
+                    </p>
+                    <p>
+                        There are two ways to activate the PBE for a given domain.
+                        We will use the instance of PISE running at <code>https://pise.proofscape.org</code>
+                        as an example.
+                    </p>
+
+                    <h4>Activation Method 1</h4>
+                    <ol>
+                        <li>
+                            You are currently on the PBE's options page. On this page, find the "Activations" section,
+                            and click the "+" button to add a new activation.
+                        </li>
+                        <li>
+                            In the dialog that comes up, enter the
+                            URL pattern <code>*://pise.proofscape.org/*</code>, then click "Proceed".
+                        </li>
+                    </ol>
+
+                    <h4>Activation Method 2</h4>
+                    <ol>
+                        <li>
+                            In a new browser tab, navigate to the site where you want to activate the PBE, such as
+                            <a target="_blank" href="https://pise.proofscape.org">https://pise.proofscape.org</a>.
+                        </li>
+                        <li>
+                            While in that tab, click the "Extensions"
+                            button on your browser's toolbar. In Chrome it may have a "puzzle piece" icon, while in
+                            Firefox it may have an icon that looks like "&gt;&gt;".
+                        </li>
+                        <li>
+                            This should bring up a menu where you will see a row for the
+                            Proofscape Browser Extension. Click the name of the extension in this row, and follow the
+                            prompts in order to activate.
+                        </li>
+                    </ol>
+
+                    <h3>Notes</h3>
+                    <ul>
+                        <li>
+                            After initial activation, you will have to <b>reload existing PISE tabs</b> before the PBE
+                            can work with them.
+                        </li>
+                        <li>
+                            You only have to activate the PBE once, for a given domain. Thereafter, it will always load
+                            when you load PISE from that domain.
+                        </li>
+                    </ul>
+
+                    <h3>Further Help</h3>
+                    <p>
+                        See the "Help" section on this page.
+                    </p>
+                    <p>
+                        You can display this dialog again by clicking "Getting Started"
+                        under the Help section.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
