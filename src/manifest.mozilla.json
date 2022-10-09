@@ -4,7 +4,8 @@
   "version": "(placeholder)",
   "browser_specific_settings": {
     "gecko": {
-      "id": "pbe@proofscape.org"
+      "id": "pbe@proofscape.org",
+      "strict_min_version": "102"
     }
   },
   "background": {

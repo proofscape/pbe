@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Proofscape Browser Extension",
   "version": "(placeholder)",
+  "minimum_chrome_version": "88",
   "background": {
     "service_worker": "background.js",
     "type": "module"

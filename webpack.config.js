@@ -99,7 +99,7 @@ module.exports = env => {
                             // When you want to try loading from a zip file in Firefox Dev Edition, you need to supply
                             // an ID. We support that with `npm run build:moz:gid` ("gid" stands for "Gecko ID").
                             if (!chrome && !supplyGeckoID) {
-                                delete manifest["browser_specific_settings"];
+                                delete manifest["browser_specific_settings"]["gecko"]["id"];
                             }
                             return JSON.stringify(manifest, null, 2);
                         },
