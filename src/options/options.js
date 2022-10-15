@@ -478,8 +478,11 @@ async function handleNewActivationRequest() {
         }
 
         const urlObject = new URL(newUrl);
-        const hostname = urlObject.hostname;
-        const urlPattern = `*://${hostname}/*`;
+        let urlPattern = `*://${urlObject.hostname}${urlObject.pathname}`;
+        if (!urlPattern.endsWith('/')) {
+            urlPattern += '/';
+        }
+        urlPattern += '*';
 
         const existingMatches = await getRegisteredMatchesForContentScript();
         // If the pattern is already registered, then we don't do anything.
