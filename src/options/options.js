@@ -456,16 +456,18 @@ async function handleNewPermissionRequest() {
         showPermissionsModal({
             urlPattern: urlPattern,
             actionDescrip: DOWNLOAD_ACTION_DESCRIP,
-            doActivate: false,
+            doActivate: "no",
         });
     }
 }
 
 async function handleNewActivationRequest() {
     await peer.checkReady(bgPeerName);
-    const newUrl = await peer.makeRequest(bgPeerName, 'consumeOptionsPageInfo', {
+    const tab = await peer.makeRequest(bgPeerName, 'consumeOptionsPageInfo', {
         propertyName: 'requestActivation',
     });
+    console.debug('options page received tab for activation:', tab);
+    const newUrl = tab?.url;
     if (newUrl) {
         // Ignore "special" pages.
         // In Firefox, special pages start with "about:" or "moz-extension:".
@@ -491,7 +493,7 @@ async function handleNewActivationRequest() {
             showPermissionsModal({
                 urlPattern: urlPattern,
                 actionDescrip: ACTIVATE_ACTION_DESCRIP,
-                doActivate: true,
+                doActivate: tab.id,
             });
         }
     }
@@ -506,9 +508,19 @@ async function showOnboarding() {
     }
 }
 
+/* Show the permissions modal.
+ *
+ * urlPattern: string giving the desired URL pattern for host permission
+ * actionDescrip: string with text telling the user what this permission is for
+ * doActivate: string or int with the possible values:
+ *   "no": we just want host permission, do not want to activate here
+ *   "yes": we want host permission, and also want to activate here
+ *   int or base-10 rep: we want host permission, and want to activate, and want to
+ *     inject the CS in the tab of this ID
+ *   In fact any string that is neither "yes" nor a valid base-10 integer means "no".
+ */
 function showPermissionsModal({urlPattern, actionDescrip, doActivate}) {
     actionDescrip = actionDescrip || 'Grant host permission for URLs matching the pattern:';
-    doActivate = +!!doActivate; // 0 or 1
     $('#permissionsModal .action-description').text(actionDescrip);
     $('#permissionsModal .modal-body input[name="pattern"]').val(urlPattern);
     $('#permissionsModal .modal-body input[name="activate"]').val(doActivate);
@@ -793,7 +805,12 @@ function startup() {
     // The "permissions" modal:
     $('#permissionsModal .btn-primary').on('click', async event => {
         const urlPattern = $('#permissionsModal .modal-body input[name="pattern"]').val();
-        const doActivate = !!+$('#permissionsModal .modal-body input[name="activate"]').val();
+
+        const activate = $('#permissionsModal .modal-body input[name="activate"]').val();
+        const tabId = +activate;
+        const doInject = !isNaN(tabId);
+        const doActivate = doInject ? true : (activate === "yes");
+
         console.debug('requesting permissions for: ', urlPattern);
         $('#permissionsModal').modal('hide');
         const granted = await browser.permissions.request({
@@ -803,6 +820,12 @@ function startup() {
             if (doActivate) {
                 const regResult = await addMatchPatternForContentScript(urlPattern);
                 console.debug('registration result:', regResult);
+                if (doInject) {
+                    browser.scripting.executeScript({
+                        target: {tabId: tabId},
+                        files: ["/content.js"]
+                    }).then(console.debug).catch(console.debug);
+                }
             }
             await loadPage();
         }
@@ -818,7 +841,7 @@ function startup() {
         showPermissionsModal({
             urlPattern: EXAMPLE_URL_PATTERN,
             actionDescrip: ACTIVATE_ACTION_DESCRIP,
-            doActivate: true,
+            doActivate: "yes",
         });
     });
 
@@ -827,7 +850,7 @@ function startup() {
         showPermissionsModal({
             urlPattern: EXAMPLE_URL_PATTERN,
             actionDescrip: DOWNLOAD_ACTION_DESCRIP,
-            doActivate: false,
+            doActivate: "no",
         });
     });
 
