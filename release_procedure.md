@@ -1,10 +1,17 @@
 # How to make a release
 
 
-To begin with, you should be on the `main` branch, having already committed all
-the changes you want to make it into the release. Now make a release branch:
+To begin with,
 
-    $ git checkout -b release
+* You should be on the `main` branch.
+* All the changes you want to make it into the release should be committed.
+* You should update the `CHANGELOG.md` with an entry for the release you're about to
+  make, and commit it.
+
+Now make a release branch, of the form `release/VERSION`. For example,
+if releasing version 3.1.0,
+
+    $ git checkout -b release/3.1.0
 
 Edit `package.json`, and remove the final `.0` component of the version number.
 Note: We use a fourth `0` to signal a development version. We do this instead of
@@ -28,8 +35,8 @@ and one for Chrome:
     $ npm run build:moz
     $ npm run build:chr
 
-Note: We do not release minified code. (It is still packed by webpack.) As explained
-[here](https://extensionworkshop.com/documentation/publish/source-code-submission/),
+Note: We do not release _minified_ code. (It is however still _packed_ by webpack.)
+As explained [here](https://extensionworkshop.com/documentation/publish/source-code-submission/),
 there is little reason to minify a browser extension.
 
 Produce the zip files using
@@ -48,21 +55,22 @@ since they are gitignored.
     $ git add -f dist-mozilla
     $ git add -f dist-chrome
 
-Commit, with a simple message stating the version number. Then add a tag, and push the
-tag to GitHub. For example,
+Commit, with a simple message stating the version number. Then add a tag, and push both
+the branch and the tag to GitHub. For example,
 
-    $ git commit -m "Version 0.2.3"
-    $ git tag v0.2.3
-    $ git push origin v0.2.3
+    $ git commit -m "Version 3.1.0"
+    $ git tag v3.1.0
+    $ git push origin release/3.1.0
+    $ git push origin v3.1.0
 
-Go back to the `main` branch, and delete the `release` branch. (We still have the version
-tag for when we want to go back there.)
+Go back to the `main` branch. Do not delete the `release` branch; it is useful when
+submitting the release to the webstores, as well as for testing old versions at a later
+time.
 
     $ git checkout main
-    $ git branch -D release
 
-Bump the dev version number. For example, if the release was `v0.2.3`, then go
-into `package.json` and change the version to `0.2.4.0`. Finally, do a commit:
+Bump the dev version number. For example, if the release was `v3.1.0`, then go
+into `package.json` and change the version to `3.2.0.0`. Finally, do a commit:
 
     $ git add package.json
     $ git commit -m "Bump dev version"
@@ -70,4 +78,4 @@ into `package.json` and change the version to `0.2.4.0`. Finally, do a commit:
 Finished! Now you can proceed to
 <https://addons.mozilla.org/> and <https://chrome.google.com/webstore/devconsole>
 to submit the releases for distribution. To access the releases, you can checkout
-the version tag, e.g. `git checkout v0.2.3`.
+the version tag, e.g. `git checkout v3.1.0`.
