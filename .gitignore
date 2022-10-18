@@ -1,0 +1,12 @@
+*~
+~$*
+*.swp
+*.swo
+*.DS_Store
+.idea
+dist
+min-dist-chrome
+dist-chrome
+min-dist-mozilla
+dist-mozilla
+node_modules

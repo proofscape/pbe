@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Example Page</title>
+    <style>
+        ul {
+            line-height: 2.5em;
+        }
+    </style>
+</head>
+<body>
+<ul>
+    <li><a href="#">https://arxiv.org/pdf/2007.11062.pdf</a></li>
+    <li><a href="#">https://arxiv.org/pdf/2009.06722.pdf</a></li>
+    <li><a href="#">http://www.digizeitschriften.de/download/PPN243919689_0043/PPN243919689_0043___log7.pdf</a></li>
+    <li><a href="#">http://www.digizeitschriften.de/download/PPN243919689_0044/PPN243919689_0044___log14.pdf</a></li>
+    <li><a href="#">http://www.digizeitschriften.de/download/PPN243919689_0045/PPN243919689_0045___log5.pdf</a></li>
+</ul>
+<script>
+    function startup() {
+        window.addEventListener('message', event => {
+            if (event.source === window && event.data) {
+                const msg = event.data;
+
+                if (msg.type === 'pfsc-ext-content-script-loaded') {
+                    window.postMessage({
+                        type: 'pfsc-ext-version-q'
+                    }, "*");
+                }
+
+                if (msg.type === 'pfsc-ext-version-a') {
+                    console.log('Proofscape extension version: ', msg.version);
+                }
+
+                if (msg.type === 'pfsc-ext-err') {
+                    console.log('Error fetching PDF:', msg.status);
+                }
+
+                if (msg.type === 'pfsc-ext-pdf-byte-array') {
+                    console.log('recv byte array', msg);
+                }
+
+            }
+        });
+
+        const anchors = document.querySelectorAll('a');
+        anchors.forEach(elt => {
+            elt.addEventListener('click', event => {
+                const url = elt.innerHTML;
+                console.log('requesting:', url);
+                window.postMessage({
+                    type: "pfsc-ext-request-pdf",
+                    url: url,
+                }, "*");
+            })
+        });
+
+    }
+    if (document.readyState !== 'loading') startup();
+    else document.addEventListener('DOMContentLoaded', startup);
+</script>
+</body>
+</html>

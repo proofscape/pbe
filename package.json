@@ -1,0 +1,36 @@
+{
+  "name": "pfsc-browser-ext",
+  "version": "2.4.0",
+  "license": "Apache-2.0",
+  "description": "Proofscape Browser Extension",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/proofscape/pbe.git"
+  },
+  "private": true,
+  "scripts": {
+    "build:moz": "webpack; date",
+    "build:moz:min": "webpack --env min; date",
+    "build:chr": "webpack --env chr; date",
+    "build:chr:min": "webpack --env chr min; date"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "copy-webpack-plugin": "^10.2.1",
+    "css-loader": "^6.5.1",
+    "sass": "^1.53.0",
+    "sass-loader": "^12.4.0",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.66.0",
+    "webpack-cli": "^4.9.1"
+  },
+  "dependencies": {
+    "bootstrap": "^4.5.2",
+    "bootswatch": "^4.5.2",
+    "browser-peers": "^0.2.0",
+    "jquery": "^3.5.1",
+    "lru-cache": "^6.0.0",
+    "popper.js": "^1.16.1",
+    "webextension-polyfill": "^0.10.0"
+  }
+}

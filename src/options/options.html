@@ -1,0 +1,204 @@
+<!-- ---------------------------------------------------------------------- *
+ *  Proofscape Browser Extension                                             *
+ *                                                                           *
+ *  Copyright (c) 2020-2022 Proofscape contributors                          *
+ *                                                                           *
+ *  Licensed under the Apache License, Version 2.0 (the "License");          *
+ *  you may not use this file except in compliance with the License.         *
+ *  You may obtain a copy of the License at                                  *
+ *                                                                           *
+ *      http://www.apache.org/licenses/LICENSE-2.0                           *
+ *                                                                           *
+ *  Unless required by applicable law or agreed to in writing, software      *
+ *  distributed under the License is distributed on an "AS IS" BASIS,        *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. *
+ *  See the License for the specific language governing permissions and      *
+ *  limitations under the License.                                           *
+ * ----------------------------------------------------------------------- -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proofscape Extension Options</title>
+
+</head>
+<body>
+<div id="main_box">
+    <img class="pbeLogo" src="pbe.png"/>
+    <div id="subtitle">The PBE puts the PDFs in PISE</div>
+    <div id="contents">
+        <!-- ---------------------- Cache ---------------------- -->
+        <hr>
+        <h2>PDF cache settings</h2>
+        <p>
+            <label for="max_cache_mb">Max size:</label> <input type="number" name="max_cache_mb" id="max_cache_mb"> MB
+        </p>
+        <p>
+            <label for="cur_cache_mb">Current size:</label>&nbsp;<span id="cur_cache_mb"></span> MB (<span id="cur_cache_pct"></span>%)
+        </p>
+        <div id="cacheContents">
+            <h3>Contents:</h3>
+            <table>
+                <thead>
+                <tr>
+                    <td>URL</td><td>Size (MB)</td><td>Last Access</td><td>Stored</td><td>Comment <span class="smaller">(e.g. author, title)</span></td>
+                </tr>
+                </thead>
+                <tbody id="cache_table_body">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ---------------------- Permissions ---------------------- -->
+        <hr>
+        <h2>Download permissions</h2>
+        <p>
+            You have granted permission to download from
+            <span id="noUrlIntroText" class="hidden">no URLs.</span>
+            <span id="multiUrlIntroText" class="hidden">URLs matching any of the following patterns:</span>
+            <span id="allUrlIntroText" class="hidden">all URLs.</span>
+        </p>
+        <table id="permissionsTable">
+            <tbody id="permissions_table_body">
+            </tbody>
+        </table>
+        <div id="addNewPermissionRow" class="marginTopRow">
+            <div id="addNewPermissionButton" title="Add new permission">+</div>
+        </div>
+        <!-- For now the allowAllRow is not displayed, and the action is disabled. See options.js -->
+        <div id="allowAllRow" class="marginTopRow" style="display: none;">
+            <label id="allowAllUrlCheckbox" class="cb"><input type="checkbox"> Allow downloads from all URLs.</label>
+        </div>
+
+        <!-- ---------------------- Advanced config ---------------------- -->
+
+        <hr>
+        <h2>Advanced Config</h2>
+        <div class="marginTopRow">
+            <label id="foregroundLoadCheckbox" class="cb"><input type="checkbox"> Load PDFs in foreground.</label>
+        </div>
+        <div class="footnote">
+            PDFs should load from cache about twice as fast, but the app may become unresponsive during loading.
+        </div>
+
+        <!-- ---------------------- About --------------------------- -->
+
+        <hr>
+        <h2>About</h2>
+        <p>
+            <a id="aboutDialogLink" href="#">About Proofscape Browser Extension</a>
+        </p>
+
+    </div>
+    <!-- ----------------------------------------------------------- -->
+    <!-- ---------------------- Overlays etc. ---------------------- -->
+    <div id="msg_box"></div>
+
+    <div class="modal fade" id="genericConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="resizeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Resize PDF cache</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="permissionsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Grant permission</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Allow the extension to download PDFs from URLs matching the pattern:
+                    </p>
+                    <p>
+                        <input type="text" size="48" placeholder="*://example.com/*">
+                        <a class="external smaller" target="_blank" href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns#Match_pattern_structure">Help</a>
+                    </p>
+                    <p>
+                        Your browser may ask you to confirm.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="aboutPBE" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">About Proofscape Browser Extension</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body aboutPBE-contents">
+                    <img class="pbeLogo" src="pbe.png"/>
+                    <div class="pbe-title">Proofscape Browser Extension</div>
+                    <div class="pbe-version">version <span></span></div>
+                    <div class="pbe-copyright">Copyright (c) 2020-2022 Proofscape contributors</div>
+                    <div class="pbe-blurb">
+                        This is an open-source project, built on the following components (scroll for more):
+                    </div>
+                    <div class="pbe-software-table-wrapper">
+<table class="pbe-software-table">
+    <thead>
+    <tr><td>Software</td><td>License</td></tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript" src="options.js"></script>
+</body>
+</html>
