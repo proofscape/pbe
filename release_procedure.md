@@ -9,12 +9,14 @@ To begin with,
   make, and commit it.
 
 Now make a release branch, of the form `release/VERSION`. For example,
-if releasing version 3.1.0,
+if releasing version 3.1,
 
-    $ git checkout -b release/3.1.0
+    $ git checkout -b release/3.1
 
-Edit `package.json`, and remove the final `.0` component of the version number.
-Note: We use a fourth `0` to signal a development version. We do this instead of
+Edit `package.json`, and remove the final `.1111` component of the version number.
+Note: Since the `pbe` project represents an application (not a library),
+we're using a simple two-part version number, not a strict three-part semver.
+We use a final `1111` to signal a development version. We do this instead of
 a `-dev` suffix, because Chrome won't let you install an extension for testing
 unless its version number consists entirely of integers, separated by dots.
 
@@ -22,15 +24,7 @@ Do an `npm install` so the `package-lock.json` updates accordingly:
 
     $ npm install
 
-Go to the related `pfsc-manage` installation (should be at `../../pfsc-manage` in
-a standard Proofscape development setup) and run
-
-    (venv) $ pfsc license about pbe
-
-to update the `src/options/about.js` file here in the PBE project.
-
-Back here in the PBE project directory, build the two releases, one for Mozilla,
-and one for Chrome:
+Build the two releases, one for Mozilla, and one for Chrome:
 
     $ npm run build:moz
     $ npm run build:chr
@@ -58,19 +52,19 @@ since they are gitignored.
 Commit, with a simple message stating the version number. Then add a tag, and push both
 the branch and the tag to GitHub. For example,
 
-    $ git commit -m "Version 3.1.0"
-    $ git tag v3.1.0
-    $ git push origin release/3.1.0
-    $ git push origin v3.1.0
+    $ git commit -m "Version 3.1"
+    $ git tag v3.1
+    $ git push origin release/3.1
+    $ git push origin v3.1
 
 Go back to the `main` branch. Do not delete the `release` branch; it is useful when
-submitting the release to the webstores, as well as for testing old versions at a later
+submitting the release to the web stores, as well as for testing old versions at a later
 time.
 
     $ git checkout main
 
-Bump the dev version number. For example, if the release was `v3.1.0`, then go
-into `package.json` and change the version to `3.2.0.0`. Finally, do a commit:
+Bump the dev version number. For example, if the release was `v3.1`, then go
+into `package.json` and change the version to `3.2.1111`. Finally, do a commit:
 
     $ git add package.json
     $ git commit -m "Bump dev version"
@@ -78,4 +72,4 @@ into `package.json` and change the version to `3.2.0.0`. Finally, do a commit:
 Finished! Now you can proceed to
 <https://addons.mozilla.org/> and <https://chrome.google.com/webstore/devconsole>
 to submit the releases for distribution. To access the releases, you can checkout
-the version tag, e.g. `git checkout v3.1.0`.
+the version tag, e.g. `git checkout v3.1`.

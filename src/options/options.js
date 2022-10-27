@@ -21,7 +21,7 @@ const $ = require('jquery');
 import 'bootstrap/js/dist/modal';
 import '../pfsc-darkly/pfsc-darkly.scss';
 import './options.css';
-import { softwareTableRows } from "./about";
+import { softwareTableRows } from "./pbeAboutDialogContents";
 import { CsBgsPeer } from "browser-peers/src/csbgspeer";
 
 const PERMISSIONS_HOST_LIST_NAME = 'permissions:hosts';

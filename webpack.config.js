@@ -16,6 +16,7 @@
  *  limitations under the License.                                           *
  * ------------------------------------------------------------------------- */
 
+const path = require("path");
 const webpack = require('webpack');
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const path_resolver = require('path');
@@ -66,6 +67,14 @@ module.exports = env => {
                         'css-loader',
                         'sass-loader',
                     ],
+                },
+                {
+                    test: /pbeAboutDialogContents.js$/,
+                    use: [
+                        {
+                            loader: path.resolve('genabout.js')
+                        }
+                    ]
                 },
             ]
         },
