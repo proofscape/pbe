@@ -69,6 +69,10 @@ module.exports = env => {
                     ],
                 },
                 {
+                    test: /\.(png|gif|ico)$/,
+                    type: 'asset/inline',
+                },
+                {
                     test: /pbeAboutDialogContents.js$/,
                     use: [
                         {

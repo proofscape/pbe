@@ -59,17 +59,21 @@ export class PbeBackground {
         try {
             browser.runtime.getBrowserInfo().then(info => {
                 this.browserInfo.name = info.name;
+                console.debug('Browser name (as reported)', this.browserInfo.name);
             });
         } catch (e) {
             /* Disappointingly, `browser.runtime.getBrowserInfo` isn't even defined in
              * Chrome, and the polyfill library doesn't define it either. So the
              * very fact that the function fails to exist already tells us we're not in
-             * Firefox -- and, for us, that means we're in Chrome. */
-            this.browserInfo.name = 'Chrome';
+             * Firefox -- and, for us, that means we're in a Chromium-based browser. */
+            this.browserInfo.name = 'Chromium';
+            console.debug('Browser name (by default)', this.browserInfo.name);
         }
 
         // Set up the browser action
-        const browserAction = this.isChrome() ? browser.action : browser.browserAction;
+        // In Firefox, `browser.browserAction` is defined, and `browser.action` is not;
+        // in Chromium-based browsers, the reverse is true.
+        const browserAction = browser.browserAction || browser.action;
         browserAction.onClicked.addListener((tab) => {
             //console.debug(tab);
             self.requestActivation(tab);
@@ -184,10 +188,6 @@ export class PbeBackground {
 
     getBrowserName() {
         return this.browserInfo.name;
-    }
-
-    isChrome() {
-        return this.browserInfo.name === 'Chrome';
     }
 
     readConfigVar({name}) {

@@ -204,3 +204,21 @@ div.footnote {
 #aboutPBE .pbe-software-table .vers {
     margin-left: 4px;
 }
+
+.extIcon {
+    background-position: center left;
+    background-repeat: no-repeat;
+    padding: 10px;
+}
+
+.extIconChev {
+    background-image: url(./icons/chev19.png);
+}
+
+.extIconPuzz {
+    background-image: url(./icons/puzz19.png);
+}
+
+.extIconCube {
+    background-image: url(./icons/cube19.png);
+}

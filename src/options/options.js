@@ -469,13 +469,9 @@ async function handleNewActivationRequest() {
     console.debug('options page received tab for activation:', tab);
     const newUrl = tab?.url;
     if (newUrl) {
-        // Ignore "special" pages.
-        // In Firefox, special pages start with "about:" or "moz-extension:".
-        if (newUrl.startsWith("about:") || newUrl.startsWith("moz-extension:")) {
-            return;
-        }
-        // In Chrome, special pages start with "chrome:" or "chrome-extension:".
-        if (newUrl.startsWith("chrome:") || newUrl.startsWith("chrome-extension:")) {
+        // Ignore "special" pages, which begin with special schemes
+        // like "about:", "moz-extension:", "chrome:", "chrome-extension:", "brave:", etc.
+        if (!newUrl.startsWith("https:") && !newUrl.startsWith("http:")) {
             return;
         }
 
@@ -619,14 +615,6 @@ function populateAdvancedConfig() {
     peer.checkReady(bgPeerName).then(() => {
         peer.makeRequest(bgPeerName, 'readConfigVar', {name: 'readStorageInBg'}).then(readStorageInBg => {
             $('#foregroundLoadCheckbox input').prop('checked', !readStorageInBg);
-        });
-    });
-}
-
-function isChrome() {
-    return peer.checkReady(bgPeerName).then(() => {
-        return peer.makeRequest(bgPeerName, 'getBrowserName', {}).then(name => {
-            return name === 'Chrome';
         });
     });
 }

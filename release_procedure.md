@@ -17,14 +17,14 @@ Edit `package.json`, and remove the final `.1111` component of the version numbe
 Note: Since the `pbe` project represents an application (not a library),
 we're using a simple two-part version number, not a strict three-part semver.
 We use a final `1111` to signal a development version. We do this instead of
-a `-dev` suffix, because Chrome won't let you install an extension for testing
+a `-dev` suffix, because Chromium won't let you install an extension for testing
 unless its version number consists entirely of integers, separated by dots.
 
 Do an `npm install` so the `package-lock.json` updates accordingly:
 
     $ npm install
 
-Build the two releases, one for Mozilla, and one for Chrome:
+Build the two releases, one for Mozilla, and one for Chromium-based browsers:
 
     $ npm run build:moz
     $ npm run build:chr

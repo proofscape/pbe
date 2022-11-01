@@ -28,12 +28,12 @@ const EXT_CONFIG_NAME = 'ext_config';
  *   to block.
  *
  * fetchInBg {bool} Setting for the CsDownloadMgr.
- *   This can only be true in Chrome, since Chrome only allows cross-origin fetch in the BGS.
- *   On Firefox we set it false by default, since Firefox allows COF at CS, and this speeds
+ *   In Chromium this can only be true, since Chromium only allows cross-origin fetch in the BGS.
+ *   In Firefox we set it false by default, since Firefox allows COF at CS, and this speeds
  *   things up.
  *
  * doDelayedStorage {bool} Setting for the CsDownloadMgr.
- *   This improves performance on both Firefox and Chrome. I keep it as a setting, but currently
+ *   This improves performance in both Firefox and Chromium. I keep it as a setting, but currently
  *   see no reason why you'd ever turn it off in either browser. It means a fetched PDF will open
  *   in the viewer before the BGS starts working on storing it. Otherwise the viewer is blank until
  *   after the PDF is stored, and the user spends several completely unnecessary seconds of waiting
