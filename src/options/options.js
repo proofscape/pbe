@@ -615,40 +615,6 @@ async function buildAndPopulatePatternsTable(
     buildTable();
 }
 
-/* Store current list of host permission strings in storage.
- *
- * In Firefox, if you remove the "<all_urls>" host permission, then your list of
- * active host permissions simply goes back to what it was before you ever added
- * "<all_urls>"; this is great, and is the behavior we would prefer. However, in
- * Chrome, removing "<all_urls>" actually removes all the old host permissions you
- * had before. So to work with Chrome we need to save the prior list in storage.
- *
- * return: promise that resolves when the array of host strings has been recorded.
- */
-function storeHostList() {
-    return browser.permissions.getAll().then(result => {
-        const hosts = result.origins || [];
-        return browser.storage.local.set({
-            [PERMISSIONS_HOST_LIST_NAME]: hosts
-        });
-    });
-}
-
-/* Restore list of host permissions from storage.
- * See `storeHostList()` function.
- *
- * return: promise that resolves with a boolean saying whether the permissions
- *   were reinstated or not.
- */
-function restoreHostListFromStorage() {
-    return browser.storage.local.get(PERMISSIONS_HOST_LIST_NAME).then(items => {
-        const hosts = items[PERMISSIONS_HOST_LIST_NAME] || [];
-        return browser.permissions.request({
-            origins: hosts
-        });
-    });
-}
-
 function populateAdvancedConfig() {
     peer.checkReady(bgPeerName).then(() => {
         peer.makeRequest(bgPeerName, 'readConfigVar', {name: 'readStorageInBg'}).then(readStorageInBg => {
