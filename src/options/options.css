@@ -180,6 +180,13 @@ div.footnote {
     left: 213px;
 }
 
+#aboutPBE .pbe-license {
+    font-size: 1em;
+    position: absolute;
+    top: 213px;
+    left: 213px;
+}
+
 #aboutPBE .pbe-blurb {
     font-size: 1.4em;
     padding-bottom: 10px;
@@ -221,4 +228,8 @@ div.footnote {
 
 .extIconCube {
     background-image: url(./icons/cube19.png);
+}
+
+.licenseText {
+    font-family: monospace;
 }

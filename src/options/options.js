@@ -826,6 +826,11 @@ function startup() {
         $('#gettingStartedModal').modal();
     });
 
+    // License dialog:
+    $('.licenseLink').on('click', event => {
+        $('#licenseModal').modal();
+    });
+
     // "About PBE" dialog:
     $('.pbe-software-table tbody').html(softwareTableRows);
     $('.pbe-version span').html(pbe_version_number);
