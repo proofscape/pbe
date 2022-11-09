@@ -466,9 +466,9 @@ async function handleNewActivationRequest() {
     const tab = await peer.makeRequest(bgPeerName, 'consumeOptionsPageInfo', {
         propertyName: 'requestActivation',
     });
-    console.debug('options page received tab for activation:', tab);
     const newUrl = tab?.url;
     if (newUrl) {
+        console.debug('options page received tab for activation:', tab);
         // Ignore "special" pages, which begin with special schemes
         // like "about:", "moz-extension:", "chrome:", "chrome-extension:", "brave:", etc.
         if (!newUrl.startsWith("https:") && !newUrl.startsWith("http:")) {

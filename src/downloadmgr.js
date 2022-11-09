@@ -258,13 +258,13 @@ export class BgsDownloadMgr extends AbstractDownloadMgr {
             if (bytes) {
                 // You said "delayed" and you provided bytes. This means you want to stash
                 // them now, to be stored later.
-                console.log('stashing PDF for delayed storage');
+                console.debug('stashing PDF for delayed storage');
                 this.delayedBytes.set(url, bytes);
                 return Promise.resolve();
             } else if (this.delayedBytes.has(url)) {
                 // You said "delayed", and you didn't provide bytes, but we found stashed bytes
                 // under the given URL. This means it's time to complete this delayed storage.
-                console.log('retrieving PDF for delayed storage');
+                console.debug('retrieving PDF for delayed storage');
                 bytes = this.delayedBytes.get(url);
                 this.delayedBytes.delete(url);
             } else {
@@ -372,6 +372,7 @@ export class CsDownloadMgr extends AbstractDownloadMgr {
         // so we ask the BGS to do it. In Firefox (where this matters, since we're allowed to fetch in CS),
         // writing to storage is VERY slow, but sending a PDF to BGS over Port is much faster (by a factor
         // of about 4.3 to 5.0 in my tests in FirefoxDE 82.0b7 on a 2019 MacBook Pro).
+        console.debug('CS download mgr deferring to BGS');
         return this.useBgDlm('storePdfBytes', args);
     }
 
