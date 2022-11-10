@@ -54,7 +54,7 @@ class AbstractDownloadMgr {
      *
      * We check whether the PDF is already present in the cache. If so, we return it from there.
      * Otherwise we attempt to fetch it from the Internet, cache it, and return it. There's also
-     * the in-between case mentioned above, where we've fetched it but are still waiting to complete
+     * the in-between case, where we've fetched it but are still waiting to complete
      * the slow operation of writing it to storage, during which time we return the byte array from memory.
      *
      * @param url {string} the URL of the desired PDF
@@ -75,40 +75,55 @@ class AbstractDownloadMgr {
      * }
      */
     async getPdf({ url, asPlainArray = false }) {
-        if (this.pendingPdfByteArrays.has(url)) {
-            // The PDF has already been fetched, but the byte array hasn't been
-            // recorded in storage yet, and is still held in memory.
-            const byteArray = this.pendingPdfByteArrays.get(url);
-            console.debug(`Found PDF bytes for "${url}" still pending storage.`);
-            return {
-                url: url,
-                bytes: asPlainArray ? Array.from(byteArray) : byteArray,
-                size: byteArray.length,
-                fromMemory: true,
-            };
-        }
         const info = await this.accessPdfCacheInfo({url:url});
+        const havePendingArray = this.pendingPdfByteArrays.has(url);
         if (info) {
-            // The cache says we already have this PDF.
-            const plainArray = await this.readPdfBytes({url:url});
-            // In testing, it was witnessed one time that the cache said we had a PDF, and yet
-            // the byte array turned out to be undefined. It happened during early efforts to switch
-            // to Manifest V3, and I have not been able to reproduce the error. Still, we take
-            // this moment to check whether we actually have data. If not, we just let the
-            // download happen again (and it will overwrite the existing array).
-            if (plainArray?.length) {
-                console.debug(`Found PDF bytes for "${url}" in cache.`);
+            if (info.stored) {
+                // The cache says we already have this PDF.
+                if (havePendingArray) {
+                    // Oops, the byte array is actually no longer pending; time for some late clean up.
+                    // This case can arise if the PDF was downloaded on the CS side, but the CS failed to
+                    // receive the message from the BGS that the array had been stored.
+                    // That can happen in Firefox (Dev Edition, v107.0b9 at time of testing)
+                    // because it seems that if the user manually closes the extension's options page during the
+                    // download process (which is quite likely if the options page was opened in order for the user
+                    // to grant download permission), this causes Ports to be forcibly disconnected, in particular that
+                    // Port on which the call to `mgr.storePdfBytes()` down in our `downloadPdf()` method is awaiting
+                    // notice of completed array storage.
+                    console.debug(`Storage of PDF array ${url} was completed earlier. Deleting from pending map now.`);
+                    this.pendingPdfByteArrays.delete(url);
+                }
+                const plainArray = await this.readPdfBytes({url: url});
+                // In testing, it was witnessed one time that the cache said we had a PDF, and yet
+                // the byte array turned out to be undefined. It happened during early efforts to switch
+                // to Manifest V3, and I have not been able to reproduce the error. Still, we take
+                // this moment to check whether we actually have data. If not, we just let the
+                // download happen again (and it will overwrite the existing array).
+                if (plainArray?.length) {
+                    console.debug(`Found PDF bytes for "${url}" in cache.`);
+                    return {
+                        url: url,
+                        bytes: asPlainArray ? plainArray : new Uint8Array(plainArray),
+                        size: plainArray.length,
+                        fromCache: true,
+                        comment: info.comment,
+                    };
+                }
+                console.debug(`Found no PDF bytes for "${url}", said to be present in the cache.`);
+            } else if (havePendingArray) {
+                // The PDF has already been fetched, but the byte array hasn't been
+                // recorded in storage yet, and is still held in memory.
+                const byteArray = this.pendingPdfByteArrays.get(url);
+                console.debug(`Found PDF bytes for "${url}" still pending storage.`);
                 return {
                     url: url,
-                    bytes: asPlainArray ? plainArray : new Uint8Array(plainArray),
-                    size: plainArray.length,
-                    fromCache: true,
-                    comment: info.comment,
+                    bytes: asPlainArray ? Array.from(byteArray) : byteArray,
+                    size: byteArray.length,
+                    fromMemory: true,
                 };
             }
-            console.debug(`Found no PDF bytes for "${url}", said to be present in the cache.`);
         }
-        // The PDF is not in the cache. We must download it.
+        // The PDF is neither in the cache, nor among the pending arrays. We must download it.
         return this.downloadPdf({url: url, asPlainArray: asPlainArray});
     }
 
@@ -258,13 +273,13 @@ export class BgsDownloadMgr extends AbstractDownloadMgr {
             if (bytes) {
                 // You said "delayed" and you provided bytes. This means you want to stash
                 // them now, to be stored later.
-                console.log('stashing PDF for delayed storage');
+                console.debug('stashing PDF for delayed storage');
                 this.delayedBytes.set(url, bytes);
                 return Promise.resolve();
             } else if (this.delayedBytes.has(url)) {
                 // You said "delayed", and you didn't provide bytes, but we found stashed bytes
                 // under the given URL. This means it's time to complete this delayed storage.
-                console.log('retrieving PDF for delayed storage');
+                console.debug('retrieving PDF for delayed storage');
                 bytes = this.delayedBytes.get(url);
                 this.delayedBytes.delete(url);
             } else {
@@ -274,9 +289,9 @@ export class BgsDownloadMgr extends AbstractDownloadMgr {
                 return Promise.resolve();
             }
         }
-        console.log(new Date(), 'storing PDF...');
-        return setByteArray(url, bytes).then(() => {
-            console.log(new Date(), 'finished storing PDF');
+        console.debug(new Date(), 'storing PDF...');
+        return setByteArray(url, bytes, this.cacheIndex).then(() => {
+            console.debug(new Date(), 'finished storing PDF');
         });
     }
 
@@ -372,6 +387,7 @@ export class CsDownloadMgr extends AbstractDownloadMgr {
         // so we ask the BGS to do it. In Firefox (where this matters, since we're allowed to fetch in CS),
         // writing to storage is VERY slow, but sending a PDF to BGS over Port is much faster (by a factor
         // of about 4.3 to 5.0 in my tests in FirefoxDE 82.0b7 on a 2019 MacBook Pro).
+        console.debug('CS download mgr deferring to BGS');
         return this.useBgDlm('storePdfBytes', args);
     }
 

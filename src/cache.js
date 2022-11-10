@@ -92,6 +92,7 @@ function loadCacheIndex(dump) {
  *   size: <int> the size of the PDF in bytes,
  *   mtime: <string> timestamp at time of initial storage,
  *   atime: <string> timestamp at time of most recent access,
+ *   stored: <bool> starts out false; goes to true after the full byte array has been stored,
  *   comment: <string> optional place for user to record notes (e.g. title and author of PDF)
  * }
  *
@@ -193,6 +194,7 @@ class CacheIndex {
             size: size,
             mtime: now,
             atime: now,
+            stored: false,
             comment: ''
         }, 0);
         const accepted = this.lru.has(url);
@@ -245,6 +247,21 @@ class CacheIndex {
         const info = this.lru.get(url);
         if (info) {
             info.atime = nowStampLex();
+            this.commit();
+        }
+        return info;
+    }
+
+    /*
+     * Record the fact that the byte array for a given URL has been stored.
+     *
+     * @param url: {string} the URL of the PDF whose bytes have been stored
+     * @return: the corresponding info object if present in the cache; else undefined
+     */
+    noteArrayStored(url) {
+        const info = this.lru.get(url);
+        if (info) {
+            info.stored = true;
             this.commit();
         }
         return info;
@@ -310,6 +327,7 @@ class CacheIndex {
      *   size: <int> the size of the PDF in bytes,
      *   mtime: <string> timestamp at time of initial storage,
      *   atime: <string> timestamp at time of most recent access,
+     *   stored: <bool> starts out false; goes to true after the full byte array has been stored,
      *   comment: <string> optional place for user to record notes (e.g. title and author of PDF)
      * }
      *
@@ -345,13 +363,17 @@ function getByteArray(url) {
  *
  * param url: the URL whose byte array is being set.
  * param byteArray: the byte array to be recorded. May be a Uint8Array or a plain Array of ints.
+ * param cacheIndex: a CacheIndex instance in which the fact of byte array storage should be noted.
  * return: promise that resolves when the operation is complete.
  */
-function setByteArray(url, byteArray) {
+function setByteArray(url, byteArray, cacheIndex) {
     const plainArray = (byteArray instanceof Uint8Array) ? Array.from(byteArray) : byteArray;
     const arrayKey = CACHE_BYTES_PREFIX + url;
     return browser.storage.local.set({
         [arrayKey]: plainArray
+    }).then(r => {
+        cacheIndex.noteArrayStored(url);
+        return r;
     });
 }
 
