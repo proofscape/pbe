@@ -42,6 +42,9 @@ Produce the zip files using
     $ web-ext build
     $ cd ..
 
+Before committing, you may want to try uploading the zip files to the two web stores, to
+confirm that they will not be rejected (due to errors).
+
 Now you can stage everything. Note that you have to force-add the dist directories,
 since they are gitignored.
 
